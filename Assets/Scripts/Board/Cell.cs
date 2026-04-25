@@ -4,9 +4,11 @@ public class Cell : MonoBehaviour
 {
     public enum CellType { Virus, CapsuleHalf }
     public enum CellColor { Red, Yellow, Blue }
+    public enum CapsuleEnd { Left, Right, Top, Bottom }
 
     public CellType cellType;
     public CellColor cellColor;
+    public CapsuleEnd capsuleEnd;
 
     public Cell partner; // the other half of this capsule, null if virus or partner destroyed
 
@@ -30,22 +32,29 @@ public class Cell : MonoBehaviour
     {
         cellType = type;
         cellColor = color;
-        ApplyColor();
+        ApplyVisuals();
     }
 
-    void ApplyColor()
+    public void SetCapsuleEnd(CapsuleEnd end)
     {
+        capsuleEnd = end;
+        ApplyVisuals();
+    }
+
+    void ApplyVisuals()
+    {
+        spriteRenderer.color = cellColor switch
+
+        {
+            CellColor.Red    => RedColor,
+            CellColor.Yellow => YellowColor,
+            CellColor.Blue   => BlueColor,
+            _                => Color.white
+        };
         if (cellType == CellType.Virus)
         {
             // Parent shows colored circle
             spriteRenderer.sprite = virusSprite; // circle sprite
-            spriteRenderer.color = cellColor switch
-            {
-                CellColor.Red    => RedColor,
-                CellColor.Yellow => YellowColor,
-                CellColor.Blue   => BlueColor,
-                _                => Color.white
-            };
 
             if (virusAnimatorObject != null)
                 virusAnimatorObject.SetActive(true); // show animated face
@@ -54,13 +63,19 @@ public class Cell : MonoBehaviour
         {
             // Capsule half — just color the square, no animation
             spriteRenderer.sprite = capsuleSprite;
-            spriteRenderer.color = cellColor switch
+
+            // Rotate sprite to correct orientation
+            // Base sprite is flat on right, rounded on left (0 degrees)
+            float angle = capsuleEnd switch
             {
-                CellColor.Red    => RedColor,
-                CellColor.Yellow => YellowColor,
-                CellColor.Blue   => BlueColor,
-                _                => Color.white
+                CapsuleEnd.Left   => 90f,
+                CapsuleEnd.Right  => 270f,
+                CapsuleEnd.Top    => 0f,
+                CapsuleEnd.Bottom => 180f,
+                _                 => 90f
             };
+
+            spriteRenderer.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
 
             if (virusAnimatorObject != null)
                 virusAnimatorObject.SetActive(false); // hide animated face

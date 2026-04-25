@@ -32,6 +32,29 @@ public class Capsule : MonoBehaviour
         }
     }
 
+    public void UpdateCellEnds()
+    {
+        switch (rotation)
+        {
+            case 0: // horizontal: A left, B right
+                cellA.SetCapsuleEnd(Cell.CapsuleEnd.Left);
+                cellB.SetCapsuleEnd(Cell.CapsuleEnd.Right);
+                break;
+            case 1: // vertical: A bottom, B top
+                cellA.SetCapsuleEnd(Cell.CapsuleEnd.Bottom);
+                cellB.SetCapsuleEnd(Cell.CapsuleEnd.Top);
+                break;
+            case 2: // horizontal flipped: A right, B left
+                cellA.SetCapsuleEnd(Cell.CapsuleEnd.Right);
+                cellB.SetCapsuleEnd(Cell.CapsuleEnd.Left);
+                break;
+            case 3: // vertical flipped: A top, B bottom
+                cellA.SetCapsuleEnd(Cell.CapsuleEnd.Top);
+                cellB.SetCapsuleEnd(Cell.CapsuleEnd.Bottom);
+                break;
+        }
+    }
+
     void HandleInput()
     {
         if (Input.GetKeyDown(KeyCode.LeftArrow))  TryMove(Vector2Int.left);
@@ -123,6 +146,7 @@ public class Capsule : MonoBehaviour
                 cellB.transform.localPosition = Vector3.zero;
                 break;
         }
+        UpdateCellEnds();
     }
 
     bool IsValidPosition()

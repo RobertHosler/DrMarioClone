@@ -57,6 +57,7 @@ public class Board : MonoBehaviour
         // Use the previewed colors
         capsule.cellA.Init(Cell.CellType.CapsuleHalf, nextColorA);
         capsule.cellB.Init(Cell.CellType.CapsuleHalf, nextColorB);
+        capsule.UpdateCellEnds();
 
         // Generate the next preview
         nextColorA = RandomColor();

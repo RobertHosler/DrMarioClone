@@ -213,7 +213,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cellType: 0
   cellColor: 0
+  partner: {fileID: 0}
   virusSprite: {fileID: -2413806693520163455, guid: 6d591e18ac7d0d240b72ab1c973de781, type: 3}
-  capsuleSprite: {fileID: 7482667652216324306, guid: e1e446b85267dd94cbede9446a3bd0c4, type: 3}
-  virusAnimatorRenderer: {fileID: 0}
+  capsuleSprite: {fileID: 21300000, guid: 9208fa31a6717ef40888b3166d1f0d5e, type: 3}
   virusAnimatorObject: {fileID: 3206113421454505043}
