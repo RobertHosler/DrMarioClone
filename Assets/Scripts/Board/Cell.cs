@@ -27,14 +27,20 @@ public class Cell : MonoBehaviour
         ApplyColor();
     }
 
+    
     void ApplyColor()
     {
-        spriteRenderer.color = cellColor switch
+        Color baseColor = cellColor switch
         {
             CellColor.Red    => RedColor,
             CellColor.Yellow => YellowColor,
             CellColor.Blue   => BlueColor,
             _                => Color.white
         };
+
+        // Viruses are darker and slightly desaturated to distinguish them
+        spriteRenderer.color = cellType == CellType.Virus 
+            ? baseColor * 0.65f 
+            : baseColor;
     }
 }

@@ -9,11 +9,13 @@ public class Capsule : MonoBehaviour
 
     [Header("Timing")]
     public float fallInterval = 0.8f;  // seconds between each downward step
+    public float softDropInterval = 0.05f; // how fast it falls while down is held
 
     // 0=horizontal(A left, B right), 1=vertical(A bottom, B top)
     // 2=horizontal(A right, B left), 3=vertical(A top, B bottom)
     private int rotation = 0;
     private float fallTimer = 0f;
+    private float softDropTimer = 0f;
     private bool locked = false;
 
     void Update()
@@ -34,8 +36,24 @@ public class Capsule : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.LeftArrow))  TryMove(Vector2Int.left);
         if (Input.GetKeyDown(KeyCode.RightArrow)) TryMove(Vector2Int.right);
-        if (Input.GetKeyDown(KeyCode.DownArrow))  TryFall();   // soft drop
         if (Input.GetKeyDown(KeyCode.UpArrow))    TryRotate();
+        
+        // Soft drop — held down key
+        if (Input.GetKey(KeyCode.DownArrow))
+        {
+            softDropTimer += Time.deltaTime;
+            if (softDropTimer >= softDropInterval)
+            {
+                softDropTimer = 0f;
+                TryFall();
+                fallTimer = 0f; // reset normal fall so it doesn't double-drop
+            }
+        }
+        else
+        {
+            softDropTimer = 0f; // reset when key released
+        }
+
     }
 
     void TryMove(Vector2Int direction)

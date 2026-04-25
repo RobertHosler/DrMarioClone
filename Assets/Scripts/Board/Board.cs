@@ -1,10 +1,13 @@
 using UnityEngine;
+using System.Collections;
 
 public class Board : MonoBehaviour
 {
     [Header("Board Dimensions")]
     public int width = 8;
-    public int height = 16;
+    public int visibleHeight = 16;  // what the player sees
+    public int bufferRows = 2;      // hidden rows above
+    public int height => visibleHeight + bufferRows;  // total grid height
 
     [Header("Prefabs")]
     public GameObject cellPrefab;
@@ -19,6 +22,8 @@ public class Board : MonoBehaviour
     private Cell previewCellB;
     private bool previewInitialized = false;
 
+    private MatchDetector matchDetector;
+    private VirusSpawner virusSpawner;
 
     // The grid: null = empty, otherwise holds a reference to the object in that cell
     private Transform[,] grid;
@@ -26,11 +31,13 @@ public class Board : MonoBehaviour
     void Awake()
     {
         grid = new Transform[width, height];
+        matchDetector = GetComponent<MatchDetector>();
+        virusSpawner = GetComponent<VirusSpawner>();
     }
 
     void Start()
     {
-        // Generate first "next" colors
+        virusSpawner.SpawnViruses();
         nextColorA = RandomColor();
         nextColorB = RandomColor();
         SpawnPreview();
@@ -40,7 +47,7 @@ public class Board : MonoBehaviour
     public void SpawnCapsule()
     {
         // Spawn at top center of the board
-        Vector2Int spawnCell = new Vector2Int(width / 2 - 1, height - 1);
+        Vector2Int spawnCell = new Vector2Int(width / 2 - 1, visibleHeight);
         Vector3 spawnPos = GridToWorld(spawnCell);
         GameObject obj = Instantiate(capsulePrefab, spawnPos, Quaternion.identity);
 
@@ -80,8 +87,14 @@ public class Board : MonoBehaviour
 
     public void OnCapsuleLocked()
     {
-        // We'll add match detection here next
-        // For now just spawn the next capsule
+        matchDetector.RunMatchDetection();
+        // Small delay before spawning next capsule so clears play out first
+        StartCoroutine(SpawnAfterDelay(0.8f));
+    }
+
+    IEnumerator SpawnAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
         SpawnCapsule();
     }
 

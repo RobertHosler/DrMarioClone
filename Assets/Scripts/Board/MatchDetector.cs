@@ -92,30 +92,50 @@ public class MatchDetector : MonoBehaviour
 
     void ApplyGravity()
     {
-        // Work bottom-up so falling cells don't overwrite each other
         for (int x = 0; x < board.width; x++)
         {
             for (int y = 1; y < board.height; y++)
             {
-                if (board.GetCell(new Vector2Int(x, y)) == null) continue;
+                Transform t = board.GetCell(new Vector2Int(x, y));
+                if (t == null) continue;
 
-                // Find how far this cell can fall
+                Cell cell = t.GetComponent<Cell>();
+                if (cell == null || cell.cellType == Cell.CellType.Virus) continue;
+
                 int dropTo = y;
                 while (dropTo - 1 >= 0 && board.GetCell(new Vector2Int(x, dropTo - 1)) == null)
                     dropTo--;
 
-                if (dropTo == y) continue; // didn't move
+                if (dropTo == y) continue;
 
-                // Move in grid
                 Vector2Int from = new Vector2Int(x, y);
                 Vector2Int to = new Vector2Int(x, dropTo);
-                Transform t = board.GetCell(from);
                 board.ClearCell(from);
                 board.PlaceInGrid(t, to);
 
-                // Move visually
-                t.position = board.GridToWorld(to);
+                // Animate instead of snapping
+                StartCoroutine(AnimateFall(t, board.GridToWorld(to)));
             }
         }
+    }
+
+    IEnumerator AnimateFall(Transform piece, Vector3 destination)
+    {
+        float speed = 8f; // units per second — tweak to taste
+        float distance = Vector3.Distance(piece.position, destination);
+        float duration = distance / speed; // further = longer
+
+        float elapsed = 0f;
+        Vector3 start = piece.position;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            piece.position = Vector3.Lerp(start, destination, t);
+            yield return null;
+        }
+
+        piece.position = destination;
     }
 }

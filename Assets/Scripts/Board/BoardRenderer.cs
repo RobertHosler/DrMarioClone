@@ -32,12 +32,12 @@ public class BoardRenderer : MonoBehaviour
         for (int x = 0; x <= board.width; x++)
         {
             Vector3 start = transform.position + new Vector3(x, 0, 0);
-            Vector3 end   = transform.position + new Vector3(x, board.height, 0);
+            Vector3 end   = transform.position + new Vector3(x, board.visibleHeight, 0);
             Gizmos.DrawLine(start, end);
         }
 
         // Horizontal lines
-        for (int y = 0; y <= board.height; y++)
+        for (int y = 0; y <= board.visibleHeight; y++)
         {
             Vector3 start = transform.position + new Vector3(0, y, 0);
             Vector3 end   = transform.position + new Vector3(board.width, y, 0);
@@ -50,8 +50,8 @@ public class BoardRenderer : MonoBehaviour
         Gizmos.color = borderColor;
 
         Vector3 origin = transform.position;
-        Vector3 topLeft     = origin + new Vector3(0, board.height, 0);
-        Vector3 topRight    = origin + new Vector3(board.width, board.height, 0);
+        Vector3 topLeft     = origin + new Vector3(0, board.visibleHeight, 0);
+        Vector3 topRight    = origin + new Vector3(board.width, board.visibleHeight, 0);
         Vector3 bottomRight = origin + new Vector3(board.width, 0, 0);
 
         Gizmos.DrawLine(origin, topLeft);
