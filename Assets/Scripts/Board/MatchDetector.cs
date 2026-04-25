@@ -67,53 +67,82 @@ public class MatchDetector : MonoBehaviour
 
     IEnumerator ClearAndSettle(HashSet<Vector2Int> toDestroy)
     {
-        // Brief pause so the player can see what's being cleared
-        yield return new WaitForSeconds(0.2f);
+        // pause before clear
+        yield return new WaitForSeconds(.5f);
 
-        // Destroy matched cells
+        // Sever partner links and clear
         foreach (Vector2Int cell in toDestroy)
         {
             Transform t = board.GetCell(cell);
             if (t != null)
             {
+                Cell cellComponent = t.GetComponent<Cell>();
+
+                // Tell the partner it's now independent
+                if (cellComponent.partner != null)
+                {
+                    cellComponent.partner.partner = null;
+                    cellComponent.partner = null;
+                }
+
                 board.ClearCell(cell);
                 Destroy(t.gameObject);
             }
         }
 
-        // Wait for gravity to settle
+        // pause before applying gravity
         yield return new WaitForSeconds(0.1f);
         ApplyGravity();
 
-        // Check for chain reactions
-        yield return new WaitForSeconds(0.3f);
+        // pause before running new match detection
+        yield return new WaitForSeconds(0.5f);
         RunMatchDetection();
     }
 
     void ApplyGravity()
     {
-        for (int x = 0; x < board.width; x++)
+        // Work bottom to top
+        for (int y = 1; y < board.height; y++)
         {
-            for (int y = 1; y < board.height; y++)
+            for (int x = 0; x < board.width; x++)
             {
-                Transform t = board.GetCell(new Vector2Int(x, y));
+                Vector2Int cellPos = new Vector2Int(x, y);
+                Transform t = board.GetCell(cellPos);
                 if (t == null) continue;
 
                 Cell cell = t.GetComponent<Cell>();
                 if (cell == null || cell.cellType == Cell.CellType.Virus) continue;
 
-                int dropTo = y;
-                while (dropTo - 1 >= 0 && board.GetCell(new Vector2Int(x, dropTo - 1)) == null)
+                bool hasSupport = cellPos.y > 0 && 
+                                board.GetCell(new Vector2Int(x, cellPos.y - 1)) != null;
+
+                if (hasSupport) continue;
+
+                // If this cell has a living partner, only fall if partner 
+                // also has no support
+                if (cell.partner != null)
+                {
+                    Vector2Int partnerPos = board.WorldToGrid(cell.partner.transform.position);
+                    Vector2Int belowPartner = new Vector2Int(partnerPos.x, partnerPos.y - 1);
+                    // Exclude the current cell itself — for vertical capsules, the cell
+                    // directly below the partner is this cell, which is not external support.
+                    bool partnerHasSupport = partnerPos.y > 0 &&
+                                            belowPartner != cellPos &&
+                                            board.GetCell(belowPartner) != null;
+                    if (partnerHasSupport) continue; // partner is supported, neither falls
+                }
+
+                // Fall
+                int dropTo = cellPos.y;
+                while (dropTo - 1 >= 0 && 
+                    board.GetCell(new Vector2Int(x, dropTo - 1)) == null)
                     dropTo--;
 
-                if (dropTo == y) continue;
+                if (dropTo == cellPos.y) continue;
 
-                Vector2Int from = new Vector2Int(x, y);
                 Vector2Int to = new Vector2Int(x, dropTo);
-                board.ClearCell(from);
+                board.ClearCell(cellPos);
                 board.PlaceInGrid(t, to);
-
-                // Animate instead of snapping
                 StartCoroutine(AnimateFall(t, board.GridToWorld(to)));
             }
         }

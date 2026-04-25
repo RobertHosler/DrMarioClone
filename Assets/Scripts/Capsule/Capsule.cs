@@ -139,7 +139,10 @@ public class Capsule : MonoBehaviour
     {
         locked = true;
 
-        // Detach cells and register them in the board grid individually
+        // Link the two halves as partners
+        cellA.partner = cellB;
+        cellB.partner = cellA;
+
         foreach (Cell cell in new[] { cellA, cellB })
         {
             Vector2Int gridPos = board.WorldToGrid(cell.transform.position);
@@ -147,9 +150,7 @@ public class Capsule : MonoBehaviour
             board.PlaceInGrid(cell.transform, gridPos);
         }
 
-        // Notify the board a piece has landed
         board.OnCapsuleLocked();
-
         Destroy(gameObject);
     }
 }

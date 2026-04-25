@@ -8,6 +8,8 @@ public class Cell : MonoBehaviour
     public CellType cellType;
     public CellColor cellColor;
 
+    public Cell partner; // the other half of this capsule, null if virus or partner destroyed
+
     private SpriteRenderer spriteRenderer;
 
     [SerializeField] private Sprite virusSprite;
