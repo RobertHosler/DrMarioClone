@@ -10,6 +10,10 @@ public class Cell : MonoBehaviour
 
     private SpriteRenderer spriteRenderer;
 
+    [SerializeField] private Sprite virusSprite;
+    [SerializeField] private Sprite capsuleSprite;
+    [SerializeField] private GameObject virusAnimatorObject; // only active for viruses
+
     // Match Dr Mario's classic palette
     private static readonly Color RedColor    = new Color(0.95f, 0.2f,  0.2f);
     private static readonly Color YellowColor = new Color(0.95f, 0.85f, 0.1f);
@@ -27,20 +31,37 @@ public class Cell : MonoBehaviour
         ApplyColor();
     }
 
-    
     void ApplyColor()
     {
-        Color baseColor = cellColor switch
+        if (cellType == CellType.Virus)
         {
-            CellColor.Red    => RedColor,
-            CellColor.Yellow => YellowColor,
-            CellColor.Blue   => BlueColor,
-            _                => Color.white
-        };
+            // Parent shows colored circle
+            spriteRenderer.sprite = virusSprite; // circle sprite
+            spriteRenderer.color = cellColor switch
+            {
+                CellColor.Red    => RedColor,
+                CellColor.Yellow => YellowColor,
+                CellColor.Blue   => BlueColor,
+                _                => Color.white
+            };
 
-        // Viruses are darker and slightly desaturated to distinguish them
-        spriteRenderer.color = cellType == CellType.Virus 
-            ? baseColor * 0.65f 
-            : baseColor;
+            if (virusAnimatorObject != null)
+                virusAnimatorObject.SetActive(true); // show animated face
+        }
+        else
+        {
+            // Capsule half — just color the square, no animation
+            spriteRenderer.sprite = capsuleSprite;
+            spriteRenderer.color = cellColor switch
+            {
+                CellColor.Red    => RedColor,
+                CellColor.Yellow => YellowColor,
+                CellColor.Blue   => BlueColor,
+                _                => Color.white
+            };
+
+            if (virusAnimatorObject != null)
+                virusAnimatorObject.SetActive(false); // hide animated face
+        }
     }
 }
