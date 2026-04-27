@@ -30,7 +30,7 @@ public class VirusSpawner : MonoBehaviour
 
     public void SpawnViruses()
     {
-        visibleHeightLimit = board.visibleHeight - 2; // keep top rows clear for capsule entry
+        visibleHeightLimit = board.visibleHeight - 4; // keep top 3 visible rows clear for capsule entry
         
         List<Vector2Int> candidates = GetCandidateCells();
         Shuffle(candidates);

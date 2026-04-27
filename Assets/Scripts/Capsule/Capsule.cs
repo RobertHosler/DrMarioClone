@@ -10,6 +10,11 @@ public class Capsule : MonoBehaviour
     [Header("Timing")]
     public float fallInterval = 0.8f;  // seconds between each downward step
     public float softDropInterval = 0.05f; // how fast it falls while down is held
+    public float dasDelay = 0.2f;     // pause before horizontal auto-repeat starts
+    public float dasInterval = 0.08f; // repeat rate once auto-repeat kicks in
+
+    private float leftTimer = 0f;
+    private float rightTimer = 0f;
 
     // 0=horizontal(A left, B right), 1=vertical(A bottom, B top)
     // 2=horizontal(A right, B left), 3=vertical(A top, B bottom)
@@ -57,9 +62,42 @@ public class Capsule : MonoBehaviour
 
     void HandleInput()
     {
-        if (Input.GetKeyDown(KeyCode.LeftArrow))  TryMove(Vector2Int.left);
-        if (Input.GetKeyDown(KeyCode.RightArrow)) TryMove(Vector2Int.right);
-        if (Input.GetKeyDown(KeyCode.UpArrow))    TryRotate();
+        bool leftHeld = Input.GetKey(KeyCode.LeftArrow);
+        bool rightHeld = Input.GetKey(KeyCode.RightArrow);
+
+        if (leftHeld && rightHeld)
+        {
+            leftTimer = 0f;
+            rightTimer = 0f;
+        }
+        else
+        {
+            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            {
+                TryMove(Vector2Int.left);
+                leftTimer = -dasDelay;
+            }
+            else if (leftHeld)
+            {
+                leftTimer += Time.deltaTime;
+                if (leftTimer >= dasInterval) { leftTimer = 0f; TryMove(Vector2Int.left); }
+            }
+            else leftTimer = 0f;
+
+            if (Input.GetKeyDown(KeyCode.RightArrow))
+            {
+                TryMove(Vector2Int.right);
+                rightTimer = -dasDelay;
+            }
+            else if (rightHeld)
+            {
+                rightTimer += Time.deltaTime;
+                if (rightTimer >= dasInterval) { rightTimer = 0f; TryMove(Vector2Int.right); }
+            }
+            else rightTimer = 0f;
+        }
+
+        if (Input.GetKeyDown(KeyCode.UpArrow)) TryRotate();
         
         // Soft drop — held down key
         if (Input.GetKey(KeyCode.DownArrow))

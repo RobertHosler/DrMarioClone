@@ -66,6 +66,7 @@ public class Board : MonoBehaviour
 
         Capsule capsule = obj.GetComponent<Capsule>();
         capsule.board = this;
+        capsule.fallInterval = Mathf.Lerp(0.8f, 0.15f, virusSpawner.level / 20f);
         activeCapsule = capsule;
 
         // Use the previewed colors
