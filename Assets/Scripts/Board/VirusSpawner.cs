@@ -8,8 +8,10 @@ public class VirusSpawner : MonoBehaviour
     [Header("Level Settings")]
     public int level = 1; // 1-20 like Dr Mario
 
+    public static int pendingLevel = -1; // set before reload to override Inspector value
+
     // Dr Mario virus count formula: 4 + (level * 4), capped at 84
-    public int VirusCount => Mathf.Min(4 + (level * 4), 84);
+    public int VirusCount => level == 0 ? 1 : Mathf.Min(4 + (level * 4), 84);
 
     // How high viruses can spawn — increases with level
     // Level 1: up to row 9, Level 20: up to row 15
@@ -19,6 +21,11 @@ public class VirusSpawner : MonoBehaviour
     void Awake()
     {
         board = GetComponent<Board>();
+        if (pendingLevel >= 0)
+        {
+            level = pendingLevel;
+            pendingLevel = -1;
+        }
     }
 
     public void SpawnViruses()

@@ -22,6 +22,10 @@ public class Board : MonoBehaviour
     private Cell previewCellB;
     private bool previewInitialized = false;
 
+    public bool isGameOver = false;
+
+    public Capsule activeCapsule;
+
     private MatchDetector matchDetector;
     private VirusSpawner virusSpawner;
 
@@ -53,6 +57,7 @@ public class Board : MonoBehaviour
 
         Capsule capsule = obj.GetComponent<Capsule>();
         capsule.board = this;
+        activeCapsule = capsule;
 
         // Use the previewed colors
         capsule.cellA.Init(Cell.CellType.CapsuleHalf, nextColorA);
@@ -88,6 +93,7 @@ public class Board : MonoBehaviour
 
     public void OnCapsuleLocked()
     {
+        activeCapsule = null;
         matchDetector.RunMatchDetection();
         // Small delay before spawning next capsule so clears play out first
         StartCoroutine(SpawnAfterDelay(0.8f));
@@ -96,7 +102,20 @@ public class Board : MonoBehaviour
     IEnumerator SpawnAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-        SpawnCapsule();
+        if (!isGameOver)
+            SpawnCapsule();
+    }
+
+    public bool HasViruses()
+    {
+        for (int x = 0; x < width; x++)
+            for (int y = 0; y < visibleHeight; y++)
+            {
+                Transform t = grid[x, y];
+                if (t != null && t.GetComponent<Cell>().cellType == Cell.CellType.Virus)
+                    return true;
+            }
+        return false;
     }
 
     Cell.CellColor RandomColor()

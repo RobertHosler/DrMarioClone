@@ -5,10 +5,12 @@ using System.Collections.Generic;
 public class MatchDetector : MonoBehaviour
 {
     private Board board;
+    private GameLoop gameLoop;
 
     void Awake()
     {
         board = GetComponent<Board>();
+        gameLoop = GetComponent<GameLoop>();
     }
 
     public void RunMatchDetection()
@@ -37,6 +39,8 @@ public class MatchDetector : MonoBehaviour
 
         if (toDestroy.Count > 0)
             StartCoroutine(ClearAndSettle(toDestroy));
+        else if (!board.HasViruses())
+            gameLoop.OnWin();
     }
 
     // Follow a direction and collect consecutive cells of the same color
