@@ -28,6 +28,7 @@ public class Board : MonoBehaviour
 
     private MatchDetector matchDetector;
     private VirusSpawner virusSpawner;
+    private GameLoop gameLoop;
 
     // The grid: null = empty, otherwise holds a reference to the object in that cell
     private Transform[,] grid;
@@ -37,6 +38,7 @@ public class Board : MonoBehaviour
         grid = new Transform[width, height];
         matchDetector = GetComponent<MatchDetector>();
         virusSpawner = GetComponent<VirusSpawner>();
+        gameLoop = GetComponent<GameLoop>();
     }
 
     void Start()
@@ -50,8 +52,15 @@ public class Board : MonoBehaviour
 
     public void SpawnCapsule()
     {
-        // Spawn at top center of the board
         Vector2Int spawnCell = new Vector2Int(width / 2 - 1, visibleHeight);
+
+        // Lose if either spawn cell is occupied
+        if (!IsValidPosition(spawnCell) || !IsValidPosition(new Vector2Int(spawnCell.x + 1, spawnCell.y)))
+        {
+            gameLoop.OnLose();
+            return;
+        }
+
         Vector3 spawnPos = GridToWorld(spawnCell);
         GameObject obj = Instantiate(capsulePrefab, spawnPos, Quaternion.identity);
 

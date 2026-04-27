@@ -4,14 +4,15 @@ using UnityEngine.SceneManagement;
 public class GameLoop : MonoBehaviour
 {
     [SerializeField] GameObject winPanel;
+    [SerializeField] GameObject losePanel;
 
     private Board board;
 
     void Awake()
     {
         board = GetComponent<Board>();
-        if (winPanel != null)
-            winPanel.SetActive(false);
+        if (winPanel != null)  winPanel.SetActive(false);
+        if (losePanel != null) losePanel.SetActive(false);
     }
 
     public void OnWin()
@@ -23,6 +24,14 @@ public class GameLoop : MonoBehaviour
 
         if (winPanel != null)
             winPanel.SetActive(true);
+    }
+
+    public void OnLose()
+    {
+        board.isGameOver = true;
+
+        if (losePanel != null)
+            losePanel.SetActive(true);
     }
 
     public void Restart()
