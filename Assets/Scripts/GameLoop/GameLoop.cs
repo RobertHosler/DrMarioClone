@@ -1,10 +1,14 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class GameLoop : MonoBehaviour
 {
     [SerializeField] GameObject winPanel;
     [SerializeField] GameObject losePanel;
+    [SerializeField] TMP_Text scoreText;
+
+    public int score = 0;
 
     private Board board;
 
@@ -13,6 +17,19 @@ public class GameLoop : MonoBehaviour
         board = GetComponent<Board>();
         if (winPanel != null)  winPanel.SetActive(false);
         if (losePanel != null) losePanel.SetActive(false);
+        UpdateScoreText();
+    }
+
+    public void AddScore(int points)
+    {
+        score += points;
+        UpdateScoreText();
+    }
+
+    void UpdateScoreText()
+    {
+        if (scoreText != null)
+            scoreText.text = $"Score\n{score}";
     }
 
     public void OnWin()

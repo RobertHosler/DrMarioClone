@@ -91,14 +91,18 @@ public class Board : MonoBehaviour
         previewCellB = objB.GetComponent<Cell>();
 
         previewCellA.Init(Cell.CellType.CapsuleHalf, nextColorA);
+        previewCellA.SetCapsuleEnd(Cell.CapsuleEnd.Left);
         previewCellB.Init(Cell.CellType.CapsuleHalf, nextColorB);
+        previewCellB.SetCapsuleEnd(Cell.CapsuleEnd.Right);
     }
 
     void UpdatePreview()
     {
         if (previewCellA == null || previewCellB == null) return;
         previewCellA.Init(Cell.CellType.CapsuleHalf, nextColorA);
+        previewCellA.SetCapsuleEnd(Cell.CapsuleEnd.Left);
         previewCellB.Init(Cell.CellType.CapsuleHalf, nextColorB);
+        previewCellB.SetCapsuleEnd(Cell.CapsuleEnd.Right);
     }
 
     public void OnCapsuleLocked()

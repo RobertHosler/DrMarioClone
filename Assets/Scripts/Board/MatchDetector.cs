@@ -13,7 +13,7 @@ public class MatchDetector : MonoBehaviour
         gameLoop = GetComponent<GameLoop>();
     }
 
-    public void RunMatchDetection()
+    public void RunMatchDetection(bool isCascade = false)
     {
         HashSet<Vector2Int> toDestroy = new HashSet<Vector2Int>();
 
@@ -38,7 +38,7 @@ public class MatchDetector : MonoBehaviour
         }
 
         if (toDestroy.Count > 0)
-            StartCoroutine(ClearAndSettle(toDestroy));
+            StartCoroutine(ClearAndSettle(toDestroy, isCascade));
         else if (!board.HasViruses())
             gameLoop.OnWin();
     }
@@ -69,10 +69,26 @@ public class MatchDetector : MonoBehaviour
         return board.GetCell(cell).GetComponent<Cell>().cellColor;
     }
 
-    IEnumerator ClearAndSettle(HashSet<Vector2Int> toDestroy)
+    IEnumerator ClearAndSettle(HashSet<Vector2Int> toDestroy, bool isCascade)
     {
         // pause before clear
         yield return new WaitForSeconds(.5f);
+
+        if (isCascade)
+            gameLoop.AddScore(1000);
+
+        int virusesCleared = 0;
+        int capsulesCleared = 0;
+        foreach (Vector2Int cell in toDestroy)
+        {
+            Transform t = board.GetCell(cell);
+            if (t == null) continue;
+            if (t.GetComponent<Cell>().cellType == Cell.CellType.Virus)
+                virusesCleared++;
+            else
+                capsulesCleared++;
+        }
+        gameLoop.AddScore(virusesCleared * 1000 + capsulesCleared * 100);
 
         // Sever partner links and clear
         foreach (Vector2Int cell in toDestroy)
@@ -100,7 +116,7 @@ public class MatchDetector : MonoBehaviour
 
         // pause before running new match detection
         yield return new WaitForSeconds(0.5f);
-        RunMatchDetection();
+        RunMatchDetection(isCascade: true);
     }
 
     void ApplyGravity()
