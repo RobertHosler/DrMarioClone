@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using System.Collections;
 
 public class Board : MonoBehaviour
@@ -29,6 +30,7 @@ public class Board : MonoBehaviour
     private MatchDetector matchDetector;
     private VirusSpawner virusSpawner;
     private GameLoop gameLoop;
+    private PlayerInput playerInput;
 
     // The grid: null = empty, otherwise holds a reference to the object in that cell
     private Transform[,] grid;
@@ -39,6 +41,7 @@ public class Board : MonoBehaviour
         matchDetector = GetComponent<MatchDetector>();
         virusSpawner = GetComponent<VirusSpawner>();
         gameLoop = GetComponent<GameLoop>();
+        playerInput = GetComponent<PlayerInput>();
     }
 
     void Start()
@@ -68,6 +71,15 @@ public class Board : MonoBehaviour
         capsule.board = this;
         capsule.fallInterval = Mathf.Lerp(0.8f, 0.15f, virusSpawner.level / 20f);
         activeCapsule = capsule;
+        
+        var map = playerInput.actions.FindActionMap("Gameplay");
+        capsule.SetActions(
+            map.FindAction("MoveLeft"),
+            map.FindAction("MoveRight"),
+            map.FindAction("SoftDrop"),
+            map.FindAction("Rotate"),
+            map.FindAction("RotateReverse")
+        );
 
         // Use the previewed colors
         capsule.cellA.Init(Cell.CellType.CapsuleHalf, nextColorA);

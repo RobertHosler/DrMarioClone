@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Capsule : MonoBehaviour
 {
@@ -8,10 +9,16 @@ public class Capsule : MonoBehaviour
     public Board board;
 
     [Header("Timing")]
-    public float fallInterval = 0.8f;  // seconds between each downward step
-    public float softDropInterval = 0.05f; // how fast it falls while down is held
-    public float dasDelay = 0.2f;     // pause before horizontal auto-repeat starts
-    public float dasInterval = 0.08f; // repeat rate once auto-repeat kicks in
+    public float fallInterval = 0.8f;
+    public float softDropInterval = 0.05f;
+    public float dasDelay = 0.2f;
+    public float dasInterval = 0.08f;
+
+    private InputAction moveLeftAction;
+    private InputAction moveRightAction;
+    private InputAction softDropAction;
+    private InputAction rotateAction;
+    private InputAction rotateReverseAction;
 
     private float leftTimer = 0f;
     private float rightTimer = 0f;
@@ -23,9 +30,18 @@ public class Capsule : MonoBehaviour
     private float softDropTimer = 0f;
     private bool locked = false;
 
+    public void SetActions(InputAction left, InputAction right, InputAction down, InputAction rotate, InputAction rotateReverse)
+    {
+        moveLeftAction      = left;
+        moveRightAction     = right;
+        softDropAction      = down;
+        rotateAction        = rotate;
+        rotateReverseAction = rotateReverse;
+    }
+
     void Update()
     {
-        if (locked) return;
+        if (locked || moveLeftAction == null || Time.timeScale == 0f) return;
 
         HandleInput();
 
@@ -41,19 +57,19 @@ public class Capsule : MonoBehaviour
     {
         switch (rotation)
         {
-            case 0: // horizontal: A left, B right
+            case 0:
                 cellA.SetCapsuleEnd(Cell.CapsuleEnd.Left);
                 cellB.SetCapsuleEnd(Cell.CapsuleEnd.Right);
                 break;
-            case 1: // vertical: A bottom, B top
+            case 1:
                 cellA.SetCapsuleEnd(Cell.CapsuleEnd.Bottom);
                 cellB.SetCapsuleEnd(Cell.CapsuleEnd.Top);
                 break;
-            case 2: // horizontal flipped: A right, B left
+            case 2:
                 cellA.SetCapsuleEnd(Cell.CapsuleEnd.Right);
                 cellB.SetCapsuleEnd(Cell.CapsuleEnd.Left);
                 break;
-            case 3: // vertical flipped: A top, B bottom
+            case 3:
                 cellA.SetCapsuleEnd(Cell.CapsuleEnd.Top);
                 cellB.SetCapsuleEnd(Cell.CapsuleEnd.Bottom);
                 break;
@@ -62,8 +78,8 @@ public class Capsule : MonoBehaviour
 
     void HandleInput()
     {
-        bool leftHeld = Input.GetKey(KeyCode.LeftArrow);
-        bool rightHeld = Input.GetKey(KeyCode.RightArrow);
+        bool leftHeld  = moveLeftAction.IsPressed();
+        bool rightHeld = moveRightAction.IsPressed();
 
         if (leftHeld && rightHeld)
         {
@@ -72,7 +88,7 @@ public class Capsule : MonoBehaviour
         }
         else
         {
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            if (moveLeftAction.WasPressedThisFrame())
             {
                 TryMove(Vector2Int.left);
                 leftTimer = -dasDelay;
@@ -84,7 +100,7 @@ public class Capsule : MonoBehaviour
             }
             else leftTimer = 0f;
 
-            if (Input.GetKeyDown(KeyCode.RightArrow))
+            if (moveRightAction.WasPressedThisFrame())
             {
                 TryMove(Vector2Int.right);
                 rightTimer = -dasDelay;
@@ -97,24 +113,20 @@ public class Capsule : MonoBehaviour
             else rightTimer = 0f;
         }
 
-        if (Input.GetKeyDown(KeyCode.UpArrow)) TryRotate();
-        
-        // Soft drop — held down key
-        if (Input.GetKey(KeyCode.DownArrow))
+        if (rotateAction.WasPressedThisFrame())        TryRotate(1);
+        if (rotateReverseAction.WasPressedThisFrame()) TryRotate(-1);
+
+        if (softDropAction.IsPressed())
         {
             softDropTimer += Time.deltaTime;
             if (softDropTimer >= softDropInterval)
             {
                 softDropTimer = 0f;
                 TryFall();
-                fallTimer = 0f; // reset normal fall so it doesn't double-drop
+                fallTimer = 0f;
             }
         }
-        else
-        {
-            softDropTimer = 0f; // reset when key released
-        }
-
+        else softDropTimer = 0f;
     }
 
     void TryMove(Vector2Int direction)
@@ -123,7 +135,7 @@ public class Capsule : MonoBehaviour
         transform.position += move;
 
         if (!IsValidPosition())
-            transform.position -= move; // undo if invalid
+            transform.position -= move;
     }
 
     void TryFall()
@@ -132,20 +144,19 @@ public class Capsule : MonoBehaviour
 
         if (!IsValidPosition())
         {
-            transform.position -= Vector3.down; // undo
+            transform.position -= Vector3.down;
             LockCapsule();
         }
     }
 
-    void TryRotate()
+    void TryRotate(int direction)
     {
         int previousRotation = rotation;
-        rotation = (rotation + 1) % 4;
+        rotation = (rotation + direction + 4) % 4;
         ApplyRotation();
 
         if (!IsValidPosition())
         {
-            // Try wall kick — nudge left or right to make room
             transform.position += Vector3.right;
             if (!IsValidPosition())
             {
@@ -154,7 +165,6 @@ public class Capsule : MonoBehaviour
                 if (!IsValidPosition())
                 {
                     transform.position -= Vector3.left;
-                    // Still invalid — undo rotation
                     rotation = previousRotation;
                     ApplyRotation();
                 }
@@ -164,22 +174,21 @@ public class Capsule : MonoBehaviour
 
     void ApplyRotation()
     {
-        // All positions relative to cellA (the anchor)
         switch (rotation)
         {
-            case 0: // horizontal: A left, B right
+            case 0:
                 cellA.transform.localPosition = Vector3.zero;
                 cellB.transform.localPosition = Vector3.right;
                 break;
-            case 1: // vertical: A bottom, B top
+            case 1:
                 cellA.transform.localPosition = Vector3.zero;
                 cellB.transform.localPosition = Vector3.up;
                 break;
-            case 2: // horizontal flipped: A right, B left
+            case 2:
                 cellA.transform.localPosition = Vector3.right;
                 cellB.transform.localPosition = Vector3.zero;
                 break;
-            case 3: // vertical flipped: A top, B bottom
+            case 3:
                 cellA.transform.localPosition = Vector3.up;
                 cellB.transform.localPosition = Vector3.zero;
                 break;
@@ -201,7 +210,6 @@ public class Capsule : MonoBehaviour
     {
         locked = true;
 
-        // Link the two halves as partners
         cellA.partner = cellB;
         cellB.partner = cellA;
 

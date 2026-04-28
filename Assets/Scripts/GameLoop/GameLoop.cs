@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 using TMPro;
 
 public class GameLoop : MonoBehaviour
@@ -19,6 +20,7 @@ public class GameLoop : MonoBehaviour
 
     private Board board;
     private bool isPaused = false;
+    private InputAction pauseAction;
 
     void Awake()
     {
@@ -28,12 +30,16 @@ public class GameLoop : MonoBehaviour
         if (pausePanel != null) pausePanel.SetActive(false);
         Time.timeScale = 1f;
         UpdateScoreText();
+
+        var playerInput = GetComponent<PlayerInput>();
+        pauseAction = playerInput.actions.FindActionMap("Gameplay").FindAction("Pause");
+        pauseAction.performed += _ => { if (!board.isGameOver) TogglePause(); };
     }
 
-    void Update()
+    void OnDestroy()
     {
-        if (Input.GetKeyDown(KeyCode.Escape) && !board.isGameOver)
-            TogglePause();
+        if (pauseAction != null)
+            pauseAction.performed -= _ => { if (!board.isGameOver) TogglePause(); };
     }
 
     public void TogglePause()
