@@ -6,7 +6,7 @@ public class LevelDisplay : MonoBehaviour
 {
     void Start()
     {
-        VirusSpawner spawner = FindObjectOfType<VirusSpawner>();
+        VirusSpawner spawner = GetComponentInParent<VirusSpawner>();
         GetComponent<TMP_Text>().text = $"Level {spawner.level}";
     }
 }
