@@ -41,6 +41,8 @@ public class MatchDetector : MonoBehaviour
             StartCoroutine(ClearAndSettle(toDestroy, isCascade));
         else if (!board.HasViruses())
             gameLoop.OnWin();
+        else
+            board.OnCascadeComplete();
     }
 
     // Follow a direction and collect consecutive cells of the same color

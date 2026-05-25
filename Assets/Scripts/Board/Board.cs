@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using System.Collections;
 
 public class Board : MonoBehaviour
 {
@@ -121,13 +120,10 @@ public class Board : MonoBehaviour
     {
         activeCapsule = null;
         matchDetector.RunMatchDetection();
-        // Small delay before spawning next capsule so clears play out first
-        StartCoroutine(SpawnAfterDelay(0.8f));
     }
 
-    IEnumerator SpawnAfterDelay(float delay)
+    public void OnCascadeComplete()
     {
-        yield return new WaitForSeconds(delay);
         if (!isGameOver)
             SpawnCapsule();
     }
