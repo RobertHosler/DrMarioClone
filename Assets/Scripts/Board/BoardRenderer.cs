@@ -6,12 +6,37 @@ public class BoardRenderer : MonoBehaviour
     [Header("Visuals")]
     public Color gridColor = new Color(1f, 1f, 1f, 0.15f);  // faint white
     public Color borderColor = new Color(1f, 1f, 1f, 0.8f); // bright white
+    public float borderWidth = 0.1f;
 
     private Board board;
+    private LineRenderer borderLine;
 
     void Awake()
     {
         board = GetComponent<Board>();
+        SetupBorderLine();
+    }
+
+    void SetupBorderLine()
+    {
+        borderLine = gameObject.AddComponent<LineRenderer>();
+        borderLine.loop = true;
+        borderLine.positionCount = 4;
+        borderLine.startWidth = borderWidth;
+        borderLine.endWidth = borderWidth;
+        borderLine.useWorldSpace = true;
+        borderLine.sortingOrder = 5;
+
+        // Unlit so border color is exact — no lighting interference
+        borderLine.material = new Material(Shader.Find("Sprites/Default"));
+        borderLine.startColor = borderColor;
+        borderLine.endColor = borderColor;
+
+        Vector3 origin = transform.position;
+        borderLine.SetPosition(0, origin);
+        borderLine.SetPosition(1, origin + new Vector3(0, board.visibleHeight, 0));
+        borderLine.SetPosition(2, origin + new Vector3(board.width, board.visibleHeight, 0));
+        borderLine.SetPosition(3, origin + new Vector3(board.width, 0, 0));
     }
 
     // OnDrawGizmos runs in the editor even while not playing — great for layout
