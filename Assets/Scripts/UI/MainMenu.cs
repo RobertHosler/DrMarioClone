@@ -46,6 +46,12 @@ public class MainMenu : MonoBehaviour
         UpdateLevelText();
     }
 
+    // Wired to the Quit button
+    public void OnQuitPressed()
+    {
+        Application.Quit();
+    }
+
     // Wired to the Start button
     public void StartGame()
     {
