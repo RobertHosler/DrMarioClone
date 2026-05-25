@@ -173,6 +173,8 @@ public class Board : MonoBehaviour
     public void PlaceInGrid(Transform piece, Vector2Int cell)
     {
         grid[cell.x, cell.y] = piece;
+        Cell cellComp = piece.GetComponent<Cell>();
+        if (cellComp != null) cellComp.gridPosition = cell;
     }
 
     // Remove from grid (after a match)

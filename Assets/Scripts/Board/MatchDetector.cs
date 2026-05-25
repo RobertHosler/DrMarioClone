@@ -100,9 +100,10 @@ public class MatchDetector : MonoBehaviour
             {
                 Cell cellComponent = t.GetComponent<Cell>();
 
-                // Tell the partner it's now independent
                 if (cellComponent.partner != null)
                 {
+                    cellComponent.partner.isSplit = true;
+                    cellComponent.partner.ApplyVisuals();
                     cellComponent.partner.partner = null;
                     cellComponent.partner = null;
                 }
@@ -123,7 +124,6 @@ public class MatchDetector : MonoBehaviour
 
     void ApplyGravity()
     {
-        // Work bottom to top
         for (int y = 1; y < board.height; y++)
         {
             for (int x = 0; x < board.width; x++)
@@ -135,39 +135,56 @@ public class MatchDetector : MonoBehaviour
                 Cell cell = t.GetComponent<Cell>();
                 if (cell == null || cell.cellType == Cell.CellType.Virus) continue;
 
-                bool hasSupport = cellPos.y > 0 && 
-                                board.GetCell(new Vector2Int(x, cellPos.y - 1)) != null;
-
-                if (hasSupport) continue;
-
-                // If this cell has a living partner, only fall if partner 
-                // also has no support
                 if (cell.partner != null)
                 {
-                    Vector2Int partnerPos = board.WorldToGrid(cell.partner.transform.position);
-                    Vector2Int belowPartner = new Vector2Int(partnerPos.x, partnerPos.y - 1);
-                    // Exclude the current cell itself — for vertical capsules, the cell
-                    // directly below the partner is this cell, which is not external support.
-                    bool partnerHasSupport = partnerPos.y > 0 &&
-                                            belowPartner != cellPos &&
-                                            board.GetCell(belowPartner) != null;
-                    if (partnerHasSupport) continue; // partner is supported, neither falls
+                    // Intact pair — move both halves by the same distance
+                    Vector2Int partnerPos = cell.partner.gridPosition;
+                    bool isVertical = partnerPos.x == cellPos.x;
+
+                    int drop;
+                    if (isVertical)
+                    {
+                        // Bottom-to-top scan means cellPos is always the lower half
+                        drop = GetDropDistance(cellPos.x, cellPos.y);
+                    }
+                    else
+                    {
+                        drop = Mathf.Min(
+                            GetDropDistance(cellPos.x, cellPos.y),
+                            GetDropDistance(partnerPos.x, partnerPos.y)
+                        );
+                    }
+
+                    if (drop == 0) continue;
+
+                    MoveCell(t, cellPos, drop);
+                    MoveCell(cell.partner.transform, partnerPos, drop);
                 }
-
-                // Fall
-                int dropTo = cellPos.y;
-                while (dropTo - 1 >= 0 && 
-                    board.GetCell(new Vector2Int(x, dropTo - 1)) == null)
-                    dropTo--;
-
-                if (dropTo == cellPos.y) continue;
-
-                Vector2Int to = new Vector2Int(x, dropTo);
-                board.ClearCell(cellPos);
-                board.PlaceInGrid(t, to);
-                StartCoroutine(AnimateFall(t, board.GridToWorld(to)));
+                else
+                {
+                    // Solo (split or never had a partner) — fall independently
+                    int drop = GetDropDistance(cellPos.x, cellPos.y);
+                    if (drop == 0) continue;
+                    MoveCell(t, cellPos, drop);
+                }
             }
         }
+    }
+
+    int GetDropDistance(int x, int y)
+    {
+        int drop = 0;
+        while (y - drop - 1 >= 0 && board.GetCell(new Vector2Int(x, y - drop - 1)) == null)
+            drop++;
+        return drop;
+    }
+
+    void MoveCell(Transform t, Vector2Int from, int drop)
+    {
+        Vector2Int to = new Vector2Int(from.x, from.y - drop);
+        board.ClearCell(from);
+        board.PlaceInGrid(t, to);
+        StartCoroutine(AnimateFall(t, board.GridToWorld(to)));
     }
 
     IEnumerator AnimateFall(Transform piece, Vector3 destination)

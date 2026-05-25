@@ -10,18 +10,21 @@ public class Cell : MonoBehaviour
     public CellColor cellColor;
     public CapsuleEnd capsuleEnd;
 
-    public Cell partner; // the other half of this capsule, null if virus or partner destroyed
+    public Cell partner;         // the other half of this capsule, null if solo or partner destroyed
+    public bool isSplit = false; // true once this half's partner has been destroyed in a match
+    public Vector2Int gridPosition; // logical grid position, kept in sync by Board.PlaceInGrid
 
     private SpriteRenderer spriteRenderer;
 
     [SerializeField] private Sprite virusSprite;
     [SerializeField] private Sprite capsuleSprite;
+    [SerializeField] private Sprite splitSprite;
     [SerializeField] private GameObject virusAnimatorObject; // only active for viruses
 
     // Match Dr Mario's classic palette
-    private static readonly Color RedColor    = new Color(0.95f, 0.2f,  0.2f);
+    private static readonly Color RedColor = new Color(0.95f, 0.2f, 0.2f);
     private static readonly Color YellowColor = new Color(0.95f, 0.85f, 0.1f);
-    private static readonly Color BlueColor   = new Color(0.2f,  0.5f,  0.95f);
+    private static readonly Color BlueColor = new Color(0.2f, 0.5f, 0.95f);
 
     void Awake()
     {
@@ -41,44 +44,42 @@ public class Cell : MonoBehaviour
         ApplyVisuals();
     }
 
-    void ApplyVisuals()
+    public void ApplyVisuals()
     {
         spriteRenderer.color = cellColor switch
-
         {
-            CellColor.Red    => RedColor,
+            CellColor.Red => RedColor,
             CellColor.Yellow => YellowColor,
-            CellColor.Blue   => BlueColor,
-            _                => Color.white
+            CellColor.Blue => BlueColor,
+            _ => Color.white
         };
+
         if (cellType == CellType.Virus)
         {
-            // Parent shows colored circle
-            spriteRenderer.sprite = virusSprite; // circle sprite
-
-            if (virusAnimatorObject != null)
-                virusAnimatorObject.SetActive(true); // show animated face
+            spriteRenderer.sprite = virusSprite;
+            spriteRenderer.transform.localRotation = Quaternion.identity;
+            if (virusAnimatorObject != null) virusAnimatorObject.SetActive(true);
+        }
+        else if (isSplit)
+        {
+            // Orphaned half: plain circle, no rotation, no animated face
+            spriteRenderer.sprite = splitSprite;
+            spriteRenderer.transform.localRotation = Quaternion.identity;
+            if (virusAnimatorObject != null) virusAnimatorObject.SetActive(false);
         }
         else
         {
-            // Capsule half — just color the square, no animation
             spriteRenderer.sprite = capsuleSprite;
-
-            // Rotate sprite to correct orientation
-            // Base sprite is flat on right, rounded on left (0 degrees)
             float angle = capsuleEnd switch
             {
-                CapsuleEnd.Left   => 90f,
-                CapsuleEnd.Right  => 270f,
-                CapsuleEnd.Top    => 0f,
+                CapsuleEnd.Left => 90f,
+                CapsuleEnd.Right => 270f,
+                CapsuleEnd.Top => 0f,
                 CapsuleEnd.Bottom => 180f,
-                _                 => 90f
+                _ => 90f
             };
-
             spriteRenderer.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
-
-            if (virusAnimatorObject != null)
-                virusAnimatorObject.SetActive(false); // hide animated face
+            if (virusAnimatorObject != null) virusAnimatorObject.SetActive(false);
         }
     }
 }
